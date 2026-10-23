@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Littérature 79 Jours</title>
+    <!-- Le lien vers la carte d'identité de l'app -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Couleur de la barre de statut sur Android -->
+    <meta name="theme-color" content="#8b5a2b">
+    <style>
+        body { font-family: 'Georgia', serif; background: #fdfbf7; color: #333; padding: 20px; line-height: 1.6; margin: 0;}
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h1 { color: #8b5a2b; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0;}
+        .badge { background: #8b5a2b; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; display: inline-block; margin-bottom: 10px;}
+        .extrait { font-style: italic; background: #f9f9f9; padding: 15px; border-left: 4px solid #8b5a2b; margin: 15px 0; }
+        button { background: #8b5a2b; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 16px; width: 100%; margin-bottom: 10px;}
+        button:hover { background: #6a441f; }
+        #btnInstall { display: none; background: #10b981; } /* Bouton vert d'installation */
+        .nav { display: flex; justify-content: space-between; margin-top: 20px; }
+        .nav button { width: 45%; background: #ccc; color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <!-- Bouton spécial qui apparaîtra si l'app est installable -->
+    <button id="btnInstall" onclick="installerApp()">📲 Installer l'application sur le téléphone</button>
+
+    <span class="badge" id="jour">Chargement...</span>
+    <h1 id="titre"></h1>
+    <p><strong>Siècle :</strong> <span id="siecle"></span> | <strong>Thème :</strong> <span id="theme"></span></p>
+    <p id="contenu"></p>
+    
+    <div class="extrait">
+        <p><strong>Texte à lire :</strong></p>
+        <p id="texteLecture"></p>
+    </div>
+    
+    <p><strong>Recommandation :</strong> <span id="recommandation"></span></p>
+    
+    <button onclick="lireTexte()">🔊 Écouter l'extrait (Voix off)</button>
+    <button onclick="arreterLecture()" style="background: #eee; color: #333;">⏹ Arrêter la voix</button>
+
+    <div class="nav">
+        <button onclick="changerJour(-1)">← Hier</button>
+        <button onclick="changerJour(1)">Demain →</button>
+    </div>
+</div>
+
+<script>
+    // --- LE CONTENU DES 79 JOURS (Extrait pour l'exemple) ---
+    // J'ai ajouté des leçons des autres siècles pour tester le changement de jour
+    const lecons = [
+        { jour: 1, siecle: "Moyen Âge", theme: "Chanson de Geste", titre: "La Chanson de Roland", contenu: "La chanson de geste est un long poème épique.", texteLecture: "Roland est vaillant, mais il est orgueilleux...", recommandation: "Lire 'La Chanson de Roland'." },
+        { jour: 2, siecle: "Moyen Âge", theme: "Roman Courtois", titre: "Chrétien de Troyes", contenu: "Au XIIe siècle, Chrétien invente le roman courtois.", texteLecture: "Lancelot monte sur la charrette infamante...", recommandation: "Lire 'Le Chevalier de la Charrette'." },
+        { jour: 3, siecle: "XVIe siècle", theme: "La Pléiade", titre: "Ronsard et Du Bellay", contenu: "Les poètes de la Pléiade défendent la langue française.", texteLecture: "Mignonne, allons voir si la rose...", recommandation: "Lire 'Les Amours' de Ronsard." },
+        { jour: 4, siecle: "XVIIe siècle", theme: "Le Classicisme", titre: "Molière", contenu: "Molière critique les mœurs de son temps par le rire.", texteLecture: "L'Avare : 'Au voleur ! Au voleur !'", recommandation: "Lire ou voir 'Le Malade imaginaire'." },
+        { jour: 5, siecle: "XIXe siècle", theme: "Le Romantisme", titre: "Victor Hugo", contenu: "Le romantisme exalte les sentiments et la nature.", texteLecture: "Demain, dès l'aube, à l'heure où blanchit la campagne...", recommandation: "Lire 'Les Contemplations'." },
+        { jour: 6, siecle: "XXe siècle", theme: "L'Existentialisme", titre: "Albert Camus", contenu: "L'existentialisme place la liberté de l'homme au centre.", texteLecture: "Aujourd'hui, maman est morte. Ou peut-être hier...", recommandation: "Lire 'L'Étranger'." }
+    ];
+
+    let jourActuel = 1;
+
+    // Charge la leçon du jour
+    function chargerLecon(index) {
+        const lecon = lecons.find(l => l.jour === index);
+        if (!lecon) {
+            alert("Cette leçon n'est pas encore prête !");
+            return;
+        }
+        
+        document.getElementById('jour').innerText = `Jour ${lecon.jour}`;
+        document.getElementById('titre').innerText = lecon.titre;
+        document.getElementById('siecle').innerText = lecon.siecle;
+        document.getElementById('theme').innerText = lecon.theme;
+        document.getElementById('contenu').innerText = lecon.contenu;
+        document.getElementById('texteLecture').innerText = lecon.texteLecture;
+        document.getElementById('recommandation').innerText = lecon.recommandation;
+        
+        arreterLecture();
+    }
+
+    function changerJour(delta) {
+        let nouveauJour = jourActuel + delta;
+        if (nouveauJour >= 1 && nouveauJour <= lecons.length) {
+            jourActuel = nouveauJour;
+            chargerLecon(jourActuel);
+        }
+    }
+
+    // --- SYNTHÈSE VOCALE ---
+    function lireTexte() {
+        const texte = document.getElementById('texteLecture').innerText;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texte);
+            utterance.lang = 'fr-FR'; 
+            utterance.rate = 0.9; 
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("Votre navigateur ne supporte pas la lecture vocale.");
+        }
+    }
+
+    function arreterLecture() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+    }
+
+    // --- LOGIQUE D'INSTALLATION (PWA) ---
+    let deferredPrompt;
+    const btnInstall = document.getElementById('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        btnInstall.style.display = 'block'; // On montre le bouton vert
+    });
+
+    function installerApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    btnInstall.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
+    }
+
+    // --- ENREGISTREMENT DU SERVICE WORKER (Pour le hors-ligne) ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("Service Worker enregistré !"))
+        .catch(err => console.log("Erreur SW :", err));
+    }
+
+    // Démarrage
+    chargerLecon(jourActuel);
+</script>
+
+</body>
+</html>
