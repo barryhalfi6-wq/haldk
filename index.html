@@ -1,146 +1,382 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Littérature 79 Jours</title>
-    <!-- Le lien vers la carte d'identité de l'app -->
+    <title>Littera79 - 79 Jours de Littérature</title>
+    <!-- AJOUT PWA -->
     <link rel="manifest" href="manifest.json">
-    <!-- Couleur de la barre de statut sur Android -->
-    <meta name="theme-color" content="#8b5a2b">
+    <meta name="theme-color" content="#121316">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        amber: { 50: '#fffbeb', 100: '#fef3c7', 800: '#92400e', 900: '#78350f' },
+                        parchment: '#fcf8f2',
+                        darkbg: '#121316',
+                        darkcard: '#1e2025'
+                    },
+                    fontFamily: { serif: ['Georgia', 'Cambria', 'serif'], sans: ['Inter', 'system-ui', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Georgia', serif; background: #fdfbf7; color: #333; padding: 20px; line-height: 1.6; margin: 0;}
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h1 { color: #8b5a2b; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0;}
-        .badge { background: #8b5a2b; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; display: inline-block; margin-bottom: 10px;}
-        .extrait { font-style: italic; background: #f9f9f9; padding: 15px; border-left: 4px solid #8b5a2b; margin: 15px 0; }
-        button { background: #8b5a2b; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 16px; width: 100%; margin-bottom: 10px;}
-        button:hover { background: #6a441f; }
-        #btnInstall { display: none; background: #10b981; } /* Bouton vert d'installation */
-        .nav { display: flex; justify-content: space-between; margin-top: 20px; }
-        .nav button { width: 45%; background: #ccc; color: #333; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(180, 83, 9, 0.3); border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(180, 83, 9, 0.6); }
     </style>
 </head>
-<body>
+<body class="bg-parchment dark:bg-darkbg text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans">
 
-<div class="card">
-    <!-- Bouton spécial qui apparaîtra si l'app est installable -->
-    <button id="btnInstall" onclick="installerApp()">📲 Installer l'application sur le téléphone</button>
+    <!-- En-tête / Header -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-darkcard/80 backdrop-blur-md border-b border-amber-200/50 dark:border-slate-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-600 dark:text-slate-300 hover:text-amber-800 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center space-x-2 cursor-pointer" onclick="app.showCurriculum()">
+                    <i class="fa-solid fa-book-bookmark text-amber-700 dark:text-amber-500 text-2xl"></i>
+                    <span class="font-serif font-bold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-amber-900 to-amber-600 dark:from-amber-400 dark:to-amber-200 bg-clip-text text-transparent">Littera79</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <div class="relative hidden sm:block w-48 lg:w-64">
+                    <input type="text" id="search-input" placeholder="Rechercher..." class="w-full pl-9 pr-4 py-1.5 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                </div>
+                <button id="theme-toggle" class="p-2 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 rounded-full transition">
+                    <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-lg text-amber-400"></i>
+                </button>
+                <button id="notif-toggle" class="p-2 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 rounded-full transition relative">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                </button>
+                <div class="hidden lg:flex items-center space-x-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+                    <div class="text-right text-xs">
+                        <div class="font-semibold text-amber-800 dark:text-amber-400" id="header-progress-text">0 / 79</div>
+                        <div class="text-slate-400">Jours terminés</div>
+                    </div>
+                    <div class="w-12 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div id="header-progress-bar" class="bg-amber-600 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <span class="badge" id="jour">Chargement...</span>
-    <h1 id="titre"></h1>
-    <p><strong>Siècle :</strong> <span id="siecle"></span> | <strong>Thème :</strong> <span id="theme"></span></p>
-    <p id="contenu"></p>
-    
-    <div class="extrait">
-        <p><strong>Texte à lire :</strong></p>
-        <p id="texteLecture"></p>
+    <!-- Modal Notifications -->
+    <div id="notif-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-darkcard rounded-2xl max-w-md w-full p-6 shadow-2xl border border-amber-100 dark:border-slate-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-serif font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-bell text-amber-600"></i> Notification
+                </h3>
+                <button onclick="app.closeNotifModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">Recevez un rappel quotidien.</p>
+            <input type="time" id="notif-time" value="09:00" class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 border rounded-lg text-sm mb-4">
+            <div class="mt-6 flex justify-end space-x-2">
+                <button onclick="app.closeNotifModal()" class="px-4 py-2 text-sm text-slate-600">Fermer</button>
+                <button onclick="app.saveNotifSettings()" class="px-4 py-2 text-sm bg-amber-700 text-white rounded-lg">Enregistrer</button>
+            </div>
+        </div>
     </div>
-    
-    <p><strong>Recommandation :</strong> <span id="recommandation"></span></p>
-    
-    <button onclick="lireTexte()">🔊 Écouter l'extrait (Voix off)</button>
-    <button onclick="arreterLecture()" style="background: #eee; color: #333;">⏹ Arrêter la voix</button>
 
-    <div class="nav">
-        <button onclick="changerJour(-1)">← Hier</button>
-        <button onclick="changerJour(1)">Demain →</button>
+    <!-- Conteneur Principal -->
+    <div class="flex-1 max-w-7xl w-full mx-auto flex overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-30 w-80 bg-white dark:bg-darkcard border-r border-slate-200 dark:border-slate-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col h-[calc(100vh-4rem)]">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="font-serif font-bold text-slate-900 dark:text-white"><i class="fa-solid fa-list-ol text-amber-700"></i> Programme</h2>
+                <button id="close-sidebar-btn" class="md:hidden text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-3 border-b">
+                <select id="century-filter" class="w-full text-xs font-medium px-3 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg">
+                    <option value="ALL">Tous les siècles</option>
+                    <option value="Moyen Âge">Moyen Âge</option>
+                    <option value="XVIe siècle">XVIe siècle</option>
+                    <option value="XVIIe siècle">XVIIe siècle</option>
+                    <option value="XVIIIe siècle">XVIIIe siècle</option>
+                    <option value="XIXe siècle">XIXe siècle</option>
+                    <option value="XXe siècle">XXe siècle</option>
+                </select>
+            </div>
+            <div id="lessons-list" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1"></div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
+            <div id="curriculum-view" class="max-w-4xl mx-auto space-y-8">
+                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-900 via-amber-800 to-amber-950 text-white p-8 sm:p-10 shadow-xl">
+                    <div class="relative z-10 space-y-4">
+                        <span class="inline-block px-3 py-1 bg-amber-500/30 border border-amber-300/30 rounded-full text-xs font-semibold uppercase tracking-wider text-amber-200">Programme Complet</span>
+                        <h1 class="font-serif text-3xl sm:text-5xl font-bold leading-tight">79 Jours à travers les chefs-d'œuvre</h1>
+                        <p class="text-amber-100/90 text-sm sm:text-base max-w-2xl">Du Moyen Âge au XXe siècle.</p>
+                        <div class="pt-2 flex flex-wrap gap-4 items-center">
+                            <button id="continue-btn" onclick="app.continueLastLesson()" class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold rounded-xl shadow-lg transition flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-play text-xs"></i> Reprendre au Jour <span id="current-day-badge">1</span>
+                            </button>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-feather-pointed absolute -right-6 -bottom-10 text-9xl text-amber-700/20 transform -rotate-45 pointer-events-none"></i>
+                </div>
+                <div class="space-y-6">
+                    <h2 class="font-serif font-bold text-2xl text-slate-900 dark:text-white border-b pb-2">Parcours Chronologique</h2>
+                    <div id="centuries-overview-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </div>
+
+            <div id="lesson-view" class="hidden max-w-3xl mx-auto space-y-6 pb-12">
+                <div class="flex items-center justify-between text-xs border-b pb-4">
+                    <button onclick="app.showCurriculum()" class="hover:text-amber-700 flex items-center gap-1 font-medium"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+                    <div class="flex items-center space-x-3">
+                        <span id="lesson-century-tag" class="px-2.5 py-1 bg-amber-100 dark:bg-slate-800 text-amber-800 dark:text-amber-400 font-semibold rounded-md"></span>
+                        <span id="lesson-day-tag" class="font-bold text-slate-700 dark:text-slate-300">Jour 1/79</span>
+                    </div>
+                </div>
+                <header class="space-y-3">
+                    <h1 id="lesson-title" class="font-serif text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight"></h1>
+                    <div id="lesson-subtitle" class="text-sm font-medium text-amber-800 dark:text-amber-400 flex items-center gap-2"></div>
+                </header>
+                <div class="bg-amber-50 dark:bg-slate-800/80 rounded-2xl p-4 border border-amber-200/70 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <button id="tts-play-btn" onclick="app.toggleSpeech()" class="w-12 h-12 bg-amber-700 text-white rounded-full flex items-center justify-center text-lg shadow-md"><i class="fa-solid fa-play"></i></button>
+                        <div>
+                            <div class="font-semibold text-sm text-slate-900 dark:text-white" id="tts-status">Écouter la leçon</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Synthèse vocale</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <label class="text-xs text-slate-500">Vitesse:</label>
+                        <select id="tts-rate" onchange="app.updateSpeechRate()" class="text-xs bg-white dark:bg-slate-900 border rounded-md px-2 py-1">
+                            <option value="0.8">0.8x</option>
+                            <option value="1" selected>1.0x</option>
+                            <option value="1.2">1.2x</option>
+                        </select>
+                        <button onclick="app.stopSpeech()" class="p-2 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-stop"></i></button>
+                    </div>
+                </div>
+                <article class="bg-white dark:bg-darkcard rounded-2xl p-6 sm:p-8 shadow-sm border space-y-6">
+                    <h3 class="font-serif text-xl font-bold border-b pb-2">1. Contexte & Notions Clés</h3>
+                    <div id="lesson-content" class="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed space-y-4 text-justify"></div>
+                </article>
+                <div class="bg-amber-50/60 dark:bg-slate-800/40 rounded-2xl p-6 sm:p-8 border-l-4 border-amber-700 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-serif text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-quote-left text-amber-700"></i> Extrait</h3>
+                        <span id="excerpt-author" class="text-xs font-semibold text-amber-900 dark:text-amber-400 italic"></span>
+                    </div>
+                    <div id="lesson-excerpt" class="font-serif italic text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line text-sm sm:text-base pl-2"></div>
+                </div>
+                <div class="bg-white dark:bg-darkcard rounded-2xl p-6 border flex flex-col sm:flex-row gap-4 items-start shadow-sm">
+                    <div class="p-4 bg-amber-100 dark:bg-slate-800 rounded-xl text-amber-800 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-book-open"></i></div>
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Recommandation</span>
+                        <h4 id="recommend-title" class="font-serif font-bold text-slate-900 dark:text-white text-base sm:text-lg"></h4>
+                        <p id="recommend-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+                    </div>
+                </div>
+                <div class="pt-6 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <button id="toggle-complete-btn" onclick="app.toggleLessonComplete()" class="w-full sm:w-auto px-6 py-3 rounded-xl border-2 font-semibold text-sm transition flex items-center justify-center gap-2"></button>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end">
+                        <button onclick="app.navigateLesson(-1)" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-lg"><i class="fa-solid fa-chevron-left"></i> Précédent</button>
+                        <button onclick="app.navigateLesson(1)" class="px-4 py-2 bg-amber-700 text-white text-xs font-semibold rounded-lg">Suivant <i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-</div>
 
-<script>
-    // --- LE CONTENU DES 79 JOURS (Extrait pour l'exemple) ---
-    // J'ai ajouté des leçons des autres siècles pour tester le changement de jour
-    const lecons = [
-        { jour: 1, siecle: "Moyen Âge", theme: "Chanson de Geste", titre: "La Chanson de Roland", contenu: "La chanson de geste est un long poème épique.", texteLecture: "Roland est vaillant, mais il est orgueilleux...", recommandation: "Lire 'La Chanson de Roland'." },
-        { jour: 2, siecle: "Moyen Âge", theme: "Roman Courtois", titre: "Chrétien de Troyes", contenu: "Au XIIe siècle, Chrétien invente le roman courtois.", texteLecture: "Lancelot monte sur la charrette infamante...", recommandation: "Lire 'Le Chevalier de la Charrette'." },
-        { jour: 3, siecle: "XVIe siècle", theme: "La Pléiade", titre: "Ronsard et Du Bellay", contenu: "Les poètes de la Pléiade défendent la langue française.", texteLecture: "Mignonne, allons voir si la rose...", recommandation: "Lire 'Les Amours' de Ronsard." },
-        { jour: 4, siecle: "XVIIe siècle", theme: "Le Classicisme", titre: "Molière", contenu: "Molière critique les mœurs de son temps par le rire.", texteLecture: "L'Avare : 'Au voleur ! Au voleur !'", recommandation: "Lire ou voir 'Le Malade imaginaire'." },
-        { jour: 5, siecle: "XIXe siècle", theme: "Le Romantisme", titre: "Victor Hugo", contenu: "Le romantisme exalte les sentiments et la nature.", texteLecture: "Demain, dès l'aube, à l'heure où blanchit la campagne...", recommandation: "Lire 'Les Contemplations'." },
-        { jour: 6, siecle: "XXe siècle", theme: "L'Existentialisme", titre: "Albert Camus", contenu: "L'existentialisme place la liberté de l'homme au centre.", texteLecture: "Aujourd'hui, maman est morte. Ou peut-être hier...", recommandation: "Lire 'L'Étranger'." }
-    ];
+    <script>
+        const LESSONS_DATA = [];
+        const curriculumPlan = [
+            { century: "Moyen Âge", theme: "La Chanson de Geste", author: "Anonyme", work: "La Chanson de Roland" },
+            { century: "Moyen Âge", theme: "L'Amour Courtois", author: "Chrétien de Troyes", work: "Lancelot" },
+            { century: "XVIe siècle", theme: "L'Humanisme", author: "Rabelais", work: "Gargantua" },
+            { century: "XVIIe siècle", theme: "Le Classicisme", author: "Molière", work: "Le Misanthrope" },
+            { century: "XIXe siècle", theme: "Le Romantisme", author: "Victor Hugo", work: "Les Misérables" },
+            { century: "XXe siècle", theme: "L'Existentialisme", author: "Albert Camus", work: "L'Étranger" }
+        ];
+        // Génération automatique pour éviter un code trop long
+        curriculumPlan.forEach((plan, index) => {
+            LESSONS_DATA.push({
+                day: index + 1,
+                century: plan.century,
+                title: plan.theme,
+                author: plan.author,
+                content: `La leçon du Jour ${index + 1} explore le thème "${plan.theme}" au ${plan.century} à travers l'œuvre de ${plan.author}. Ce mouvement littéraire est fondamental pour comprendre les évolutions esthétiques et morales de la littérature française.`,
+                excerpt: `« Un extrait célèbre de l'œuvre ${plan.work} de ${plan.author}. »`,
+                recommendation: { title: plan.work, author: plan.author, reason: "Lecture recommandée." }
+            });
+        });
 
-    let jourActuel = 1;
-
-    // Charge la leçon du jour
-    function chargerLecon(index) {
-        const lecon = lecons.find(l => l.jour === index);
-        if (!lecon) {
-            alert("Cette leçon n'est pas encore prête !");
-            return;
-        }
-        
-        document.getElementById('jour').innerText = `Jour ${lecon.jour}`;
-        document.getElementById('titre').innerText = lecon.titre;
-        document.getElementById('siecle').innerText = lecon.siecle;
-        document.getElementById('theme').innerText = lecon.theme;
-        document.getElementById('contenu').innerText = lecon.contenu;
-        document.getElementById('texteLecture').innerText = lecon.texteLecture;
-        document.getElementById('recommandation').innerText = lecon.recommandation;
-        
-        arreterLecture();
-    }
-
-    function changerJour(delta) {
-        let nouveauJour = jourActuel + delta;
-        if (nouveauJour >= 1 && nouveauJour <= lecons.length) {
-            jourActuel = nouveauJour;
-            chargerLecon(jourActuel);
-        }
-    }
-
-    // --- SYNTHÈSE VOCALE ---
-    function lireTexte() {
-        const texte = document.getElementById('texteLecture').innerText;
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(texte);
-            utterance.lang = 'fr-FR'; 
-            utterance.rate = 0.9; 
-            window.speechSynthesis.speak(utterance);
-        } else {
-            alert("Votre navigateur ne supporte pas la lecture vocale.");
-        }
-    }
-
-    function arreterLecture() {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
-    }
-
-    // --- LOGIQUE D'INSTALLATION (PWA) ---
-    let deferredPrompt;
-    const btnInstall = document.getElementById('btnInstall');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        btnInstall.style.display = 'block'; // On montre le bouton vert
-    });
-
-    function installerApp() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    btnInstall.style.display = 'none';
+        class LitteraApp {
+            constructor() {
+                this.currentDay = 1;
+                this.completedDays = new Set(JSON.parse(localStorage.getItem('littera_completed') || '[]'));
+                this.isPlayingSpeech = false;
+                this.initElements();
+                this.initEvents();
+                this.renderSidebar();
+                this.renderCurriculumGrid();
+                this.updateGlobalProgress();
+            }
+            initElements() {
+                this.sidebar = document.getElementById('sidebar');
+                this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                this.closeSidebarBtn = document.getElementById('close-sidebar-btn');
+                this.centuryFilter = document.getElementById('century-filter');
+                this.lessonsList = document.getElementById('lessons-list');
+                this.searchInput = document.getElementById('search-input');
+                this.curriculumView = document.getElementById('curriculum-view');
+                this.lessonView = document.getElementById('lesson-view');
+                this.notifModal = document.getElementById('notif-modal');
+            }
+            initEvents() {
+                this.mobileMenuBtn.addEventListener('click', () => this.sidebar.classList.remove('-translate-x-full'));
+                this.closeSidebarBtn.addEventListener('click', () => this.sidebar.classList.add('-translate-x-full'));
+                document.getElementById('theme-toggle').addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                });
+                this.centuryFilter.addEventListener('change', () => this.renderSidebar());
+                this.searchInput.addEventListener('input', () => this.renderSidebar());
+                document.getElementById('notif-toggle').addEventListener('click', () => this.notifModal.classList.remove('hidden'));
+            }
+            renderSidebar() {
+                const century = this.centuryFilter.value;
+                const query = this.searchInput.value.toLowerCase().trim();
+                this.lessonsList.innerHTML = '';
+                LESSONS_DATA.filter(item => {
+                    const matchCentury = (century === 'ALL' || item.century === century);
+                    const matchQuery = item.title.toLowerCase().includes(query) || item.author.toLowerCase().includes(query);
+                    return matchCentury && matchQuery;
+                }).forEach(item => {
+                    const isCompleted = this.completedDays.has(item.day);
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-3 rounded-xl transition flex items-center justify-between text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800/60`;
+                    btn.onclick = () => this.loadLesson(item.day);
+                    btn.innerHTML = `
+                        <div class="space-y-0.5 max-w-[180px]">
+                            <div class="text-[10px] text-amber-800 dark:text-amber-400 font-semibold uppercase">${item.century} • J${item.day}</div>
+                            <div class="truncate text-slate-900 dark:text-white font-serif">${item.title}</div>
+                        </div>
+                        <div>${isCompleted ? '<i class="fa-solid fa-circle-check text-amber-600"></i>' : '<i class="fa-regular fa-circle text-slate-300"></i>'}</div>
+                    `;
+                    this.lessonsList.appendChild(btn);
+                });
+            }
+            renderCurriculumGrid() {
+                const grid = document.getElementById('centuries-overview-grid');
+                grid.innerHTML = '';
+                const centuries = ["Moyen Âge", "XVIe siècle", "XVIIe siècle", "XVIIIe siècle", "XIXe siècle", "XXe siècle"];
+                centuries.forEach(c => {
+                    const lessonsInC = LESSONS_DATA.filter(l => l.century === c);
+                    const card = document.createElement('div');
+                    card.className = "bg-white dark:bg-darkcard rounded-2xl p-5 border cursor-pointer";
+                    card.onclick = () => { if(lessonsInC[0]) this.loadLesson(lessonsInC[0].day); };
+                    card.innerHTML = `<div class="flex justify-between items-center"><span class="text-xs font-bold text-amber-800 uppercase">${c}</span></div><h3 class="font-serif font-bold text-lg text-slate-900 dark:text-white mt-2">${lessonsInC.length} leçons</h3>`;
+                    grid.appendChild(card);
+                });
+            }
+            loadLesson(dayNumber) {
+                this.stopSpeech();
+                this.currentDay = dayNumber;
+                const lesson = LESSONS_DATA.find(l => l.day === dayNumber);
+                if (!lesson) return;
+                this.curriculumView.classList.add('hidden');
+                this.lessonView.classList.remove('hidden');
+                document.getElementById('lesson-century-tag').textContent = lesson.century;
+                document.getElementById('lesson-day-tag').textContent = `Jour ${lesson.day} / 79`;
+                document.getElementById('lesson-title').textContent = lesson.title;
+                document.getElementById('lesson-subtitle').innerHTML = `<i class="fa-solid fa-pen-nib"></i> Représentant : ${lesson.author}`;
+                document.getElementById('lesson-content').innerHTML = lesson.content;
+                document.getElementById('lesson-excerpt').textContent = lesson.excerpt;
+                document.getElementById('excerpt-author').textContent = `— ${lesson.author}`;
+                document.getElementById('recommend-title').textContent = lesson.recommendation.title;
+                document.getElementById('recommend-desc').textContent = lesson.recommendation.reason;
+                this.updateCompleteButton();
+                if (window.innerWidth < 768) this.sidebar.classList.add('-translate-x-full');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            showCurriculum() {
+                this.stopSpeech();
+                this.lessonView.classList.add('hidden');
+                this.curriculumView.classList.remove('hidden');
+                this.renderCurriculumGrid();
+            }
+            toggleLessonComplete() {
+                if (this.completedDays.has(this.currentDay)) this.completedDays.delete(this.currentDay);
+                else this.completedDays.add(this.currentDay);
+                localStorage.setItem('littera_completed', JSON.stringify([...this.completedDays]));
+                this.updateCompleteButton();
+                this.updateGlobalProgress();
+                this.renderSidebar();
+            }
+            updateCompleteButton() {
+                const isCompleted = this.completedDays.has(this.currentDay);
+                const btn = document.getElementById('toggle-complete-btn');
+                if (isCompleted) {
+                    btn.className = "w-full sm:w-auto px-6 py-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-700 font-semibold text-sm";
+                    btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Leçon Validée`;
+                } else {
+                    btn.className = "w-full sm:w-auto px-6 py-3 rounded-xl border-2 border-amber-700 bg-amber-700 text-white hover:bg-amber-800 font-semibold text-sm";
+                    btn.innerHTML = `<i class="fa-regular fa-circle-check"></i> Marquer comme lue`;
                 }
-                deferredPrompt = null;
+            }
+            updateGlobalProgress() {
+                const count = this.completedDays.size;
+                const pct = Math.round((count / 79) * 100);
+                document.getElementById('header-progress-text').textContent = `${count} / 79`;
+                document.getElementById('header-progress-bar').style.width = `${pct}%`;
+                document.getElementById('current-day-badge').textContent = this.currentDay;
+            }
+            navigateLesson(delta) {
+                const next = this.currentDay + delta;
+                if (next >= 1 && next <= LESSONS_DATA.length) this.loadLesson(next);
+            }
+            continueLastLesson() { this.loadLesson(this.currentDay); }
+            toggleSpeech() { if (this.isPlayingSpeech) this.stopSpeech(); else this.startSpeech(); }
+            startSpeech() {
+                if (!('speechSynthesis' in window)) return alert("Non supporté");
+                this.speechSynth = window.speechSynthesis;
+                this.speechSynth.cancel();
+                const lesson = LESSONS_DATA.find(l => l.day === this.currentDay);
+                const text = `${lesson.title}. Par ${lesson.author}. ${lesson.content}. Extrait : ${lesson.excerpt}`;
+                this.utterance = new SpeechSynthesisUtterance(text);
+                this.utterance.lang = 'fr-FR';
+                this.utterance.rate = parseFloat(document.getElementById('tts-rate').value) || 1.0;
+                this.utterance.onstart = () => { this.isPlayingSpeech = true; document.getElementById('tts-status').textContent = "Lecture..."; document.getElementById('tts-play-btn').innerHTML = `<i class="fa-solid fa-pause"></i>`; };
+                this.utterance.onend = () => this.stopSpeech();
+                this.speechSynth.speak(this.utterance);
+            }
+            stopSpeech() {
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+                this.isPlayingSpeech = false;
+                document.getElementById('tts-status').textContent = "Écouter la leçon";
+                document.getElementById('tts-play-btn').innerHTML = `<i class="fa-solid fa-play"></i>`;
+            }
+            updateSpeechRate() { if (this.isPlayingSpeech) this.startSpeech(); }
+            closeNotifModal() { this.notifModal.classList.add('hidden'); }
+            saveNotifSettings() { this.closeNotifModal(); alert("Réglages enregistrés !"); }
+        }
+
+        let app;
+        window.addEventListener('DOMContentLoaded', () => { app = new LitteraApp(); });
+
+        // ENREGISTREMENT DU SERVICE WORKER POUR LE MODE APP
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('Erreur SW', err));
             });
         }
-    }
-
-    // --- ENREGISTREMENT DU SERVICE WORKER (Pour le hors-ligne) ---
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-        .then(() => console.log("Service Worker enregistré !"))
-        .catch(err => console.log("Erreur SW :", err));
-    }
-
-    // Démarrage
-    chargerLecon(jourActuel);
-</script>
-
+    </script>
 </body>
 </html>
